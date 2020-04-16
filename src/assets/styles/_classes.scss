@@ -10,6 +10,7 @@
     padding: 1rem 2rem;
     font-weight: 700;
     background-color: #ddd;
+    outline: none;
     cursor: pointer;
     transition: box-shadow 0.2s;
     &:hover{
@@ -30,6 +31,10 @@
         border: 1px solid var(--error);
         background: #fff;
         color: var(--error);
+        &:hover{
+            background-color: var(--error);
+            color: #fff;
+        }
     }
 }
 
