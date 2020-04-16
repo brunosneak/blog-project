@@ -12,6 +12,7 @@
             padding: 0 5rem;
             border-radius: 0.3rem;
             display: flex;
+            margin-bottom: 5rem;
             flex-direction: column;
             align-items: center;
             img{
@@ -29,6 +30,7 @@
             }
             .article-content {
                 max-width: 550px;
+                white-space: pre-line;
             }
             .article-actions {
                 display: flex;
