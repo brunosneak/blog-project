@@ -9,7 +9,7 @@ const createArticles = (articles) => {
         articleDOM.innerHTML = `
 <img src=${ article.img } alt="profile">
 <h2>${ article.title }</h2>
-<p class="article-author">${ article.author } - ${ article.category }/p>
+<p class="article-author">${ article.author } - ${ article.category }</p>
 <p class="article-content">
     ${ article.content }
 </p>
