@@ -472,6 +472,57 @@ module.exports = function (METHOD_NAME, options) {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/internals/array-reduce.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/internals/array-reduce.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var aFunction = __webpack_require__(/*! ../internals/a-function */ "./node_modules/core-js/internals/a-function.js");
+var toObject = __webpack_require__(/*! ../internals/to-object */ "./node_modules/core-js/internals/to-object.js");
+var IndexedObject = __webpack_require__(/*! ../internals/indexed-object */ "./node_modules/core-js/internals/indexed-object.js");
+var toLength = __webpack_require__(/*! ../internals/to-length */ "./node_modules/core-js/internals/to-length.js");
+
+// `Array.prototype.{ reduce, reduceRight }` methods implementation
+var createMethod = function (IS_RIGHT) {
+  return function (that, callbackfn, argumentsLength, memo) {
+    aFunction(callbackfn);
+    var O = toObject(that);
+    var self = IndexedObject(O);
+    var length = toLength(O.length);
+    var index = IS_RIGHT ? length - 1 : 0;
+    var i = IS_RIGHT ? -1 : 1;
+    if (argumentsLength < 2) while (true) {
+      if (index in self) {
+        memo = self[index];
+        index += i;
+        break;
+      }
+      index += i;
+      if (IS_RIGHT ? index < 0 : length <= index) {
+        throw TypeError('Reduce of empty array with no initial value');
+      }
+    }
+    for (;IS_RIGHT ? index >= 0 : length > index; index += i) if (index in self) {
+      memo = callbackfn(memo, self[index], index, O);
+    }
+    return memo;
+  };
+};
+
+module.exports = {
+  // `Array.prototype.reduce` method
+  // https://tc39.github.io/ecma262/#sec-array.prototype.reduce
+  left: createMethod(false),
+  // `Array.prototype.reduceRight` method
+  // https://tc39.github.io/ecma262/#sec-array.prototype.reduceright
+  right: createMethod(true)
+};
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/internals/array-species-create.js":
 /*!****************************************************************!*\
   !*** ./node_modules/core-js/internals/array-species-create.js ***!
@@ -3005,6 +3056,36 @@ $({ target: 'Array', proto: true, forced: FORCED }, {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.array.filter.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.array.filter.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var $filter = __webpack_require__(/*! ../internals/array-iteration */ "./node_modules/core-js/internals/array-iteration.js").filter;
+var arrayMethodHasSpeciesSupport = __webpack_require__(/*! ../internals/array-method-has-species-support */ "./node_modules/core-js/internals/array-method-has-species-support.js");
+var arrayMethodUsesToLength = __webpack_require__(/*! ../internals/array-method-uses-to-length */ "./node_modules/core-js/internals/array-method-uses-to-length.js");
+
+var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('filter');
+// Edge 14- issue
+var USES_TO_LENGTH = arrayMethodUsesToLength('filter');
+
+// `Array.prototype.filter` method
+// https://tc39.github.io/ecma262/#sec-array.prototype.filter
+// with adding support of @@species
+$({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGTH }, {
+  filter: function filter(callbackfn /* , thisArg */) {
+    return $filter(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.array.for-each.js":
 /*!***********************************************************!*\
   !*** ./node_modules/core-js/modules/es.array.for-each.js ***!
@@ -3145,6 +3226,34 @@ $({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGT
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.array.reduce.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.array.reduce.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var $reduce = __webpack_require__(/*! ../internals/array-reduce */ "./node_modules/core-js/internals/array-reduce.js").left;
+var arrayMethodIsStrict = __webpack_require__(/*! ../internals/array-method-is-strict */ "./node_modules/core-js/internals/array-method-is-strict.js");
+var arrayMethodUsesToLength = __webpack_require__(/*! ../internals/array-method-uses-to-length */ "./node_modules/core-js/internals/array-method-uses-to-length.js");
+
+var STRICT_METHOD = arrayMethodIsStrict('reduce');
+var USES_TO_LENGTH = arrayMethodUsesToLength('reduce', { 1: 0 });
+
+// `Array.prototype.reduce` method
+// https://tc39.github.io/ecma262/#sec-array.prototype.reduce
+$({ target: 'Array', proto: true, forced: !STRICT_METHOD || !USES_TO_LENGTH }, {
+  reduce: function reduce(callbackfn /* , initialValue */) {
+    return $reduce(this, callbackfn, arguments.length, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.array.slice.js":
 /*!********************************************************!*\
   !*** ./node_modules/core-js/modules/es.array.slice.js ***!
@@ -3206,6 +3315,50 @@ $({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGT
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.array.sort.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/core-js/modules/es.array.sort.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var aFunction = __webpack_require__(/*! ../internals/a-function */ "./node_modules/core-js/internals/a-function.js");
+var toObject = __webpack_require__(/*! ../internals/to-object */ "./node_modules/core-js/internals/to-object.js");
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+var arrayMethodIsStrict = __webpack_require__(/*! ../internals/array-method-is-strict */ "./node_modules/core-js/internals/array-method-is-strict.js");
+
+var test = [];
+var nativeSort = test.sort;
+
+// IE8-
+var FAILS_ON_UNDEFINED = fails(function () {
+  test.sort(undefined);
+});
+// V8 bug
+var FAILS_ON_NULL = fails(function () {
+  test.sort(null);
+});
+// Old WebKit
+var STRICT_METHOD = arrayMethodIsStrict('sort');
+
+var FORCED = FAILS_ON_UNDEFINED || !FAILS_ON_NULL || !STRICT_METHOD;
+
+// `Array.prototype.sort` method
+// https://tc39.github.io/ecma262/#sec-array.prototype.sort
+$({ target: 'Array', proto: true, forced: FORCED }, {
+  sort: function sort(comparefn) {
+    return comparefn === undefined
+      ? nativeSort.call(toObject(this))
+      : nativeSort.call(toObject(this), aFunction(comparefn));
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.function.name.js":
 /*!**********************************************************!*\
   !*** ./node_modules/core-js/modules/es.function.name.js ***!
@@ -3235,6 +3388,31 @@ if (DESCRIPTORS && !(NAME in FunctionPrototype)) {
     }
   });
 }
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es.object.keys.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.object.keys.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var toObject = __webpack_require__(/*! ../internals/to-object */ "./node_modules/core-js/internals/to-object.js");
+var nativeKeys = __webpack_require__(/*! ../internals/object-keys */ "./node_modules/core-js/internals/object-keys.js");
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+
+var FAILS_ON_PRIMITIVES = fails(function () { nativeKeys(1); });
+
+// `Object.keys` method
+// https://tc39.github.io/ecma262/#sec-object.keys
+$({ target: 'Object', stat: true, forced: FAILS_ON_PRIMITIVES }, {
+  keys: function keys(it) {
+    return nativeKeys(toObject(it));
+  }
+});
 
 
 /***/ }),
@@ -4210,7 +4388,7 @@ for (var COLLECTION_NAME in DOMIterables) {
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.i, ":root {\n  font-size: 62.5%; }\n\nbody {\n  font-size: 1.6rem;\n  color: var(--text);\n  font-family: var(--font-family); }\n\nh1, h2, h3, h4 {\n  margin-bottom: 2rem; }\n\nh1 {\n  font-size: 3.5rem; }\n\nh2 {\n  font-size: 3rem; }\n\nh3 {\n  font-size: 2.5rem; }\n\nh4 {\n  font-size: 2rem; }\n\nul {\n  list-style: none; }\n\nimg {\n  max-width: 100%; }\n\na {\n  color: var(--text);\n  text-decoration: none; }\n\n.title-underline {\n  padding-bottom: 2rem; }\n\n.btn {\n  border: 0;\n  border-radius: 3px;\n  padding: 1rem 2rem;\n  font-weight: 700;\n  background-color: #ddd;\n  outline: none;\n  cursor: pointer;\n  transition: box-shadow 0.2s; }\n  .btn:hover {\n    box-shadow: var(--box-shadow);\n    transition: box-shadow 0.2s; }\n  .btn-primary {\n    border: 1px solid var(--primary);\n    background-color: var(--primary);\n    color: #fff; }\n  .btn-secondary {\n    border: 1px solid var(--primary);\n    background: #fff;\n    color: var(--primary); }\n  .btn-danger {\n    border: 1px solid var(--error);\n    background: #fff;\n    color: var(--error); }\n    .btn-danger:hover {\n      background-color: var(--error);\n      color: #fff; }\n\n.text-error {\n  color: var(--error); }\n\n/* Landscape phones and down */\n/* Landscape phone to portrait tablet */\n/* Portrait tablet to landscape and desktop */\n/* Large desktop */\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box; }\n\n:root {\n  --primary: #2ecc71;\n  --dark: #27ae60;\n  --accent: #2c3e50;\n  --text: #333;\n  --divider: #ddd;\n  --dark-grey: #324355;\n  --error: #e74c3c;\n  --font-family: 'Muli', sans-serif;\n  --box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);\n  --hint: #95a5a6; }\n\n.container {\n  min-height: 100vh;\n  display: grid;\n  grid: \"header\" auto\r \"content\" 1fr\r \"footer\" auto /\r auto; }\n\nheader {\n  grid-area: header;\n  background-color: var(--dark);\n  padding: 20px;\n  display: flex;\n  flex-flow: row nowrap;\n  justify-content: space-between;\n  align-items: center; }\n  header a {\n    color: #fff; }\n  header .header-brand {\n    font-size: 4rem;\n    font-weight: 700; }\n  header .header-menu {\n    position: relative; }\n    header .header-menu ul {\n      display: flex; }\n      @media (max-width: 480px) {\n        header .header-menu ul {\n          display: none; } }\n      header .header-menu ul li .header-nav {\n        font-size: 1.8rem;\n        padding: 0px 10px; }\n      header .header-menu ul li .active {\n        font-weight: 700;\n        text-decoration: underline; }\n    header .header-menu .header-menu-icon {\n      font-size: 3rem;\n      color: #fff;\n      display: none; }\n      @media (max-width: 480px) {\n        header .header-menu .header-menu-icon {\n          display: block; } }\n    header .header-menu .mobile-menu {\n      display: none;\n      position: absolute;\n      box-shadow: var(--box-shadow);\n      top: 9.5rem;\n      right: 1rem;\n      padding: 3rem 1.5rem;\n      width: 20rem;\n      background-color: #fff; }\n      header .header-menu .mobile-menu ul {\n        display: block; }\n        header .header-menu .mobile-menu ul li {\n          margin: 2rem 0; }\n          header .header-menu .mobile-menu ul li a {\n            color: var(--text); }\n    header .header-menu .mobile-menu.open {\n      display: block; }\n\n.content {\n  background-color: #eee;\n  grid-area: content;\n  padding: 20px; }\n\nfooter {\n  grid-area: footer;\n  padding: 20px;\n  background-color: var(--dark-grey);\n  font-size: 1.8rem;\n  text-align: center;\n  color: #fff; }\n", ""]);
+exports.push([module.i, ":root {\n  font-size: 62.5%; }\n\nbody {\n  font-size: 1.6rem;\n  color: var(--text);\n  font-family: var(--font-family); }\n\nh1, h2, h3, h4 {\n  margin-bottom: 2rem; }\n\nh1 {\n  font-size: 3.5rem; }\n\nh2 {\n  font-size: 3rem; }\n\nh3 {\n  font-size: 2.5rem; }\n\nh4 {\n  font-size: 2rem; }\n\nul {\n  list-style: none; }\n\nimg {\n  max-width: 100%; }\n\na {\n  color: var(--text);\n  text-decoration: none; }\n\nstrong {\n  color: var(--accent); }\n\n.title-underline {\n  padding-bottom: 2rem; }\n\n.btn {\n  border: 0;\n  border-radius: 3px;\n  padding: 1rem 2rem;\n  font-weight: 700;\n  background-color: #ddd;\n  outline: none;\n  cursor: pointer;\n  transition: box-shadow 0.2s; }\n  .btn:hover {\n    box-shadow: var(--box-shadow);\n    transition: box-shadow 0.2s; }\n  .btn-primary {\n    border: 1px solid var(--primary);\n    background-color: var(--primary);\n    color: #fff; }\n  .btn-secondary {\n    border: 1px solid var(--primary);\n    background: #fff;\n    color: var(--primary); }\n  .btn-danger {\n    border: 1px solid var(--error);\n    background: #fff;\n    color: var(--error); }\n    .btn-danger:hover {\n      background-color: var(--error);\n      color: #fff; }\n\n.text-error {\n  color: var(--error); }\n\n/* Landscape phones and down */\n/* Landscape phone to portrait tablet */\n/* Portrait tablet to landscape and desktop */\n/* Large desktop */\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box; }\n\n:root {\n  --primary: #2ecc71;\n  --dark: #27ae60;\n  --accent: #2c3e50;\n  --text: #333;\n  --divider: #ddd;\n  --dark-grey: #324355;\n  --error: #e74c3c;\n  --font-family: 'Muli', sans-serif;\n  --box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);\n  --hint: #95a5a6; }\n\n.container {\n  min-height: 100vh;\n  display: grid;\n  grid: \"header\" auto\r \"content\" 1fr\r \"footer\" auto /\r auto; }\n\nheader {\n  grid-area: header;\n  background-color: var(--dark);\n  padding: 20px;\n  display: flex;\n  flex-flow: row nowrap;\n  justify-content: space-between;\n  align-items: center; }\n  header a {\n    color: #fff; }\n  header .header-brand {\n    font-size: 4rem;\n    font-weight: 700; }\n  header .header-menu {\n    position: relative; }\n    header .header-menu ul {\n      display: flex; }\n      @media (max-width: 480px) {\n        header .header-menu ul {\n          display: none; } }\n      header .header-menu ul li .header-nav {\n        font-size: 1.8rem;\n        padding: 0px 10px; }\n      header .header-menu ul li .active {\n        font-weight: 700;\n        text-decoration: underline; }\n    header .header-menu .header-menu-icon {\n      font-size: 3rem;\n      color: #fff;\n      display: none; }\n      @media (max-width: 480px) {\n        header .header-menu .header-menu-icon {\n          display: block; } }\n    header .header-menu .mobile-menu {\n      display: none;\n      position: absolute;\n      box-shadow: var(--box-shadow);\n      top: 9.5rem;\n      right: 1rem;\n      padding: 3rem 1.5rem;\n      width: 20rem;\n      background-color: #fff; }\n      header .header-menu .mobile-menu ul {\n        display: block; }\n        header .header-menu .mobile-menu ul li {\n          margin: 2rem 0; }\n          header .header-menu .mobile-menu ul li a {\n            color: var(--text); }\n    header .header-menu .mobile-menu.open {\n      display: block; }\n\n.content {\n  background-color: #eee;\n  grid-area: content;\n  padding: 20px; }\n\nfooter {\n  grid-area: footer;\n  padding: 20px;\n  background-color: var(--dark-grey);\n  font-size: 1.8rem;\n  text-align: center;\n  color: #fff; }\n", ""]);
 // Exports
 module.exports = exports;
 
@@ -4228,7 +4406,7 @@ module.exports = exports;
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.i, "/* Landscape phones and down */\n/* Landscape phone to portrait tablet */\n/* Portrait tablet to landscape and desktop */\n/* Large desktop */\n.content {\n  align-items: center;\n  display: flex;\n  justify-content: center; }\n  .content .articles-container {\n    margin: 5rem 0 10rem 0;\n    max-width: 800px;\n    width: 100%; }\n    .content .articles-container .article {\n      box-shadow: var(--box-shadow);\n      background-color: #fff;\n      padding: 0 5rem;\n      border-radius: 0.3rem;\n      display: flex;\n      margin-bottom: 5rem;\n      flex-direction: column;\n      align-items: center; }\n      @media (max-width: 480px) {\n        .content .articles-container .article {\n          padding: 0 2rem; } }\n      .content .articles-container .article img {\n        height: 6rem;\n        width: 6rem;\n        border-radius: 50%;\n        margin-top: -3rem; }\n      .content .articles-container .article h2 {\n        margin: 2rem 0 0 0; }\n      .content .articles-container .article .article-author {\n        color: var(--hint);\n        margin-bottom: 3rem; }\n      .content .articles-container .article .article-content {\n        max-width: 550px;\n        white-space: pre-line; }\n      .content .articles-container .article .article-actions {\n        display: flex;\n        justify-content: flex-end;\n        width: 100%;\n        padding: 2rem 0;\n        margin-top: 2rem;\n        border-top: 1px solid #eee; }\n      .content .articles-container .article .btn {\n        margin-left: 1rem; }\n", ""]);
+exports.push([module.i, "/* Landscape phones and down */\n/* Landscape phone to portrait tablet */\n/* Portrait tablet to landscape and desktop */\n/* Large desktop */\n.content {\n  align-items: center;\n  display: flex;\n  justify-content: center;\n  align-items: flex-start;\n  padding-top: 5rem; }\n  .content .sidebar {\n    flex: 0 0 25rem;\n    padding: 0 2rem 2rem 2rem; }\n    .content .sidebar select {\n      width: 100%;\n      margin-bottom: 2rem;\n      border-radius: 0.3rem;\n      background-color: #fff;\n      border: 0;\n      outline: 0;\n      padding: 1rem;\n      box-shadow: var(--box-shadow); }\n    .content .sidebar .categories {\n      padding: 2rem;\n      background: #fff;\n      border-radius: 0.3rem;\n      box-shadow: var(--box-shadow); }\n      .content .sidebar .categories li {\n        margin: 1rem;\n        transition: color 0.2s;\n        cursor: pointer; }\n        .content .sidebar .categories li:hover {\n          color: var(--primary); }\n          .content .sidebar .categories li:hover strong {\n            color: var(--primary); }\n      .content .sidebar .categories .active {\n        color: var(--primary);\n        font-weight: 700; }\n        .content .sidebar .categories .active strong {\n          color: var(--primary); }\n  .content .articles-container {\n    flex: 1;\n    margin: 0 0 10rem 0;\n    max-width: 80rem; }\n    .content .articles-container .article {\n      box-shadow: var(--box-shadow);\n      background-color: #fff;\n      padding: 0 5rem;\n      border-radius: 0.3rem;\n      display: flex;\n      margin-bottom: 5rem;\n      flex-direction: column;\n      align-items: center; }\n      @media (max-width: 480px) {\n        .content .articles-container .article {\n          padding: 0 2rem; } }\n      .content .articles-container .article img {\n        height: 6rem;\n        width: 6rem;\n        border-radius: 50%;\n        margin-top: -3rem; }\n      .content .articles-container .article h2 {\n        margin: 2rem 0 0 0; }\n      .content .articles-container .article .article-author {\n        color: var(--hint);\n        margin-bottom: 3rem; }\n      .content .articles-container .article .article-content {\n        max-width: 550px;\n        white-space: pre-line; }\n      .content .articles-container .article .article-actions {\n        display: flex;\n        justify-content: flex-end;\n        width: 100%;\n        padding: 2rem 0;\n        margin-top: 2rem;\n        border-top: 1px solid #eee; }\n      .content .articles-container .article .btn {\n        margin-left: 1rem; }\n", ""]);
 // Exports
 module.exports = exports;
 
@@ -5439,36 +5617,48 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var core_js_modules_es_symbol_iterator__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_symbol_iterator__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.concat */ "./node_modules/core-js/modules/es.array.concat.js");
 /* harmony import */ var core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.for-each */ "./node_modules/core-js/modules/es.array.for-each.js");
-/* harmony import */ var core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.from */ "./node_modules/core-js/modules/es.array.from.js");
-/* harmony import */ var core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.iterator */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.map */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.slice */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.function.name */ "./node_modules/core-js/modules/es.function.name.js");
-/* harmony import */ var core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.object.to-string */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.promise */ "./node_modules/core-js/modules/es.promise.js");
-/* harmony import */ var core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.string.iterator */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_13__);
-/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
-/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_14__);
-/* harmony import */ var core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_15___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_15__);
-/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! regenerator-runtime/runtime */ "./node_modules/regenerator-runtime/runtime.js");
-/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_16__);
-/* harmony import */ var _assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./assets/styles/styles.scss */ "./src/assets/styles/styles.scss");
-/* harmony import */ var _assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(_assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_17__);
-/* harmony import */ var _index_scss__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./index.scss */ "./src/index.scss");
-/* harmony import */ var _index_scss__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(_index_scss__WEBPACK_IMPORTED_MODULE_18__);
+/* harmony import */ var core_js_modules_es_array_filter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.filter */ "./node_modules/core-js/modules/es.array.filter.js");
+/* harmony import */ var core_js_modules_es_array_filter__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_filter__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.for-each */ "./node_modules/core-js/modules/es.array.for-each.js");
+/* harmony import */ var core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_for_each__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.from */ "./node_modules/core-js/modules/es.array.from.js");
+/* harmony import */ var core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_from__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.iterator */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.map */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var core_js_modules_es_array_reduce__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.reduce */ "./node_modules/core-js/modules/es.array.reduce.js");
+/* harmony import */ var core_js_modules_es_array_reduce__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_reduce__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.slice */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var core_js_modules_es_array_sort__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.sort */ "./node_modules/core-js/modules/es.array.sort.js");
+/* harmony import */ var core_js_modules_es_array_sort__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_sort__WEBPACK_IMPORTED_MODULE_11__);
+/* harmony import */ var core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.function.name */ "./node_modules/core-js/modules/es.function.name.js");
+/* harmony import */ var core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_function_name__WEBPACK_IMPORTED_MODULE_12__);
+/* harmony import */ var core_js_modules_es_object_keys__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.object.keys */ "./node_modules/core-js/modules/es.object.keys.js");
+/* harmony import */ var core_js_modules_es_object_keys__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_keys__WEBPACK_IMPORTED_MODULE_13__);
+/* harmony import */ var core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.object.to-string */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string__WEBPACK_IMPORTED_MODULE_14__);
+/* harmony import */ var core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.promise */ "./node_modules/core-js/modules/es.promise.js");
+/* harmony import */ var core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_15___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_promise__WEBPACK_IMPORTED_MODULE_15__);
+/* harmony import */ var core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string__WEBPACK_IMPORTED_MODULE_16__);
+/* harmony import */ var core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.string.iterator */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_iterator__WEBPACK_IMPORTED_MODULE_17__);
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each__WEBPACK_IMPORTED_MODULE_18__);
+/* harmony import */ var core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_19___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_iterator__WEBPACK_IMPORTED_MODULE_19__);
+/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! regenerator-runtime/runtime */ "./node_modules/regenerator-runtime/runtime.js");
+/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_20___default = /*#__PURE__*/__webpack_require__.n(regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_20__);
+/* harmony import */ var _assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./assets/styles/styles.scss */ "./src/assets/styles/styles.scss");
+/* harmony import */ var _assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_21___default = /*#__PURE__*/__webpack_require__.n(_assets_styles_styles_scss__WEBPACK_IMPORTED_MODULE_21__);
+/* harmony import */ var _index_scss__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./index.scss */ "./src/index.scss");
+/* harmony import */ var _index_scss__WEBPACK_IMPORTED_MODULE_22___default = /*#__PURE__*/__webpack_require__.n(_index_scss__WEBPACK_IMPORTED_MODULE_22__);
+
+
+
+
 
 
 
@@ -5506,9 +5696,24 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 var articleContainerElement = document.querySelector(".articles-container");
+var categoriesContainerElement = document.querySelector(".categories");
+var selectElement = document.querySelector("select");
+var filter;
+var articles;
+var sortBy = "desc";
+selectElement.addEventListener("change", function () {
+  sortBy = selectElement.value;
+  fetchArticle();
+});
 
-var createArticles = function createArticles(articles) {
-  var articlesDOM = articles.map(function (article) {
+var createArticles = function createArticles() {
+  var articlesDOM = articles.filter(function (article) {
+    if (filter) {
+      return article.category === filter;
+    } else {
+      return true;
+    }
+  }).map(function (article) {
     var articleDOM = document.createElement("div");
     articleDOM.classList.add("article");
     articleDOM.innerHTML = "\n<img src=".concat(article.img, " alt=\"profile\">\n<h2>").concat(article.title, "</h2>\n<p class=\"article-author\">").concat(article.author, " - ").concat(new Date(article.createdAt).toLocaleDateString("fr-FR", {
@@ -5516,50 +5721,73 @@ var createArticles = function createArticles(articles) {
       day: "2-digit",
       month: "long",
       year: "numeric"
-    }), "\n</p>\n<p class=\"article-content\">\n    ").concat(article.content, "\n</p>\n<div class=\"article-actions\">\n    <button class=\"btn btn-danger\" data-id=").concat(article._id, ">Supprimer</button>\n</div>");
+    }), "\n</p>\n<p class=\"article-content\">\n    ").concat(article.content, "\n</p>\n<div class=\"article-actions\">\n    <button class=\"btn btn-danger\" data-id=").concat(article._id, ">Supprimer</button>\n    <button class=\"btn btn-primary\" data-id=").concat(article._id, ">Modifier</button>\n</div>");
     return articleDOM;
   });
   articleContainerElement.innerHTML = "";
   articleContainerElement.append.apply(articleContainerElement, _toConsumableArray(articlesDOM));
   var deleteButtons = articleContainerElement.querySelectorAll(".btn-danger");
+  var editButtons = articleContainerElement.querySelectorAll(".btn-primary");
+  editButtons.forEach(function (button) {
+    button.addEventListener("click", function (event) {
+      var target = event.target;
+      var articleId = target.dataset.id;
+      location.assign("/form.html?id=".concat(articleId));
+    });
+  });
   deleteButtons.forEach(function (button) {
     button.addEventListener("click", /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
-        var target, articleId, response, body;
+        var result, target, articleId, response, body;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _context.prev = 0;
+                _context.next = 2;
+                return openModal("Etes vous sur de vouloir supprimer votre article ?");
+
+              case 2:
+                result = _context.sent;
+
+                if (!(result === true)) {
+                  _context.next = 21;
+                  break;
+                }
+
+                _context.prev = 4;
                 target = event.target;
                 articleId = target.dataset.id;
-                _context.next = 5;
+                _context.next = 9;
                 return fetch("https://restapi.fr/api/article/".concat(articleId), {
                   method: "DELETE"
                 });
 
-              case 5:
+              case 9:
                 response = _context.sent;
-                _context.next = 8;
+                _context.next = 12;
                 return response.json();
 
-              case 8:
+              case 12:
                 body = _context.sent;
                 fetchArticle();
-                _context.next = 15;
+                _context.next = 19;
                 break;
 
-              case 12:
-                _context.prev = 12;
-                _context.t0 = _context["catch"](0);
-                console.log("error : ", _context.t0);
+              case 16:
+                _context.prev = 16;
+                _context.t0 = _context["catch"](4);
+                console.log("e : ", _context.t0);
 
-              case 15:
+              case 19:
+                _context.next = 21;
+                break;
+
+              case 21:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[0, 12]]);
+        }, _callee, null, [[4, 16]]);
       }));
 
       return function (_x) {
@@ -5569,16 +5797,63 @@ var createArticles = function createArticles(articles) {
   });
 };
 
+var displayMenuCategories = function displayMenuCategories(categoriesArr) {
+  var liElements = categoriesArr.map(function (categoryElem) {
+    var li = document.createElement("li");
+    li.innerHTML = "".concat(categoryElem[0], " ( <strong>").concat(categoryElem[1], "</strong> )");
+
+    if (categoryElem[0] === filter) {
+      li.classList.add("active");
+    }
+
+    li.addEventListener("click", function () {
+      if (filter === categoryElem[0]) {
+        filter = null;
+        li.classList.remove("active");
+        createArticles();
+      } else {
+        filter = categoryElem[0];
+        liElements.forEach(function (li) {
+          li.classList.remove("active");
+        });
+        li.classList.add("active");
+        createArticles();
+      }
+    });
+    return li;
+  });
+  categoriesContainerElement.innerHTML = "";
+  categoriesContainerElement.append.apply(categoriesContainerElement, _toConsumableArray(liElements));
+};
+
+var createMenuCategories = function createMenuCategories() {
+  var categories = articles.reduce(function (acc, article) {
+    if (acc[article.category]) {
+      acc[article.category]++;
+    } else {
+      acc[article.category] = 1;
+    }
+
+    return acc;
+  }, {});
+  var categoriesArr = Object.keys(categories).map(function (category) {
+    return [category, categories[category]];
+  }).sort(function (c1, c2) {
+    return c1[0].localeCompare(c2[0]);
+  });
+  displayMenuCategories(categoriesArr);
+};
+
 var fetchArticle = /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
-    var response, articles;
+    var response;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
             _context2.prev = 0;
             _context2.next = 3;
-            return fetch("https://restapi.fr/api/article");
+            return fetch("https://restapi.fr/api/article?sort=createdAt:".concat(sortBy));
 
           case 3:
             response = _context2.sent;
@@ -5587,8 +5862,8 @@ var fetchArticle = /*#__PURE__*/function () {
 
           case 6:
             articles = _context2.sent;
-            console.log(articles);
-            createArticles(articles);
+            createArticles();
+            createMenuCategories();
             _context2.next = 14;
             break;
 
